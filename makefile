@@ -82,10 +82,11 @@ $(ARDUINO)/WMath.cpp \
 $(ARDUINO)/WString.cpp \
 $(ARDUINO)/main.cpp \
 $(ARDUINO_LIB)/EEPROM/EEPROM.cpp \
+TinyGPS.cpp
 
-#CXX_MODULES += $(shell find $(ARDUINO_LIB)  -maxdepth 2 -mindepth 2 -type f -name *.cpp -exec /bin/echo -n " {}" \;)
+CXX_MODULES += $(shell find $(ARDUINO_LIB)  -maxdepth 3 -mindepth 2 -type f -name "*.cpp" -exec /bin/echo -n " {}" \;)
 
-CXX_APP = simple.cpp
+CXX_APP = __BUILD__$(TARGET).cpp
 MODULES = $(C_MODULES) $(CXX_MODULES)
 SRC = $(C_MODULES)
 CXXSRC = $(CXX_MODULES) $(CXX_APP)
@@ -170,9 +171,13 @@ ALL_ASFLAGS = -x assembler-with-cpp $(ASFLAGS) -mmcu=$(MCU)
 ALL_LDFLAGS = $(LDFLAGS) -mmcu=$(MCU)
 
 # Default target.
-all: applet_files build sizeafter
+all: $(CXX_APP) build sizeafter
 
 build: elf hex
+
+$(CXX_APP): $(TARGET).ino
+	cp $(TARGET).ino __BUILD__$(TARGET).cpp
+
 
 applet/main.o: $(CXX_APP)
 	test -d applet || mkdir applet
@@ -270,7 +275,7 @@ applet/core.a: $(OBJ_MODULES)
 
 # Target: clean project.
 clean:
-	$(REMOVE) applet/main.hex applet/main.eep applet/main.cof applet/main.elf \
+	$(REMOVE) $(CXX_APP) applet/main.hex applet/main.eep applet/main.cof applet/main.elf \
 	applet/main.map applet/main.sym applet/main.o applet/main.lss applet/core.a \
 	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(CXXSRC:.cpp=.s) $(CXXSRC:.cpp=.d)
 
