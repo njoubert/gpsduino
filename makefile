@@ -44,7 +44,7 @@
 TARGET = $(notdir $(CURDIR))
 # Change this to match your arduino installation directory
 INSTALL_DIR = /Applications/Arduino.app/Contents/Resources/Java
-PORT = /dev/tty.usbmodem5d11
+PORT = /dev/tty.usbmodem411
 UPLOAD_RATE = 115200
 AVRDUDE_PROGRAMMER = arduino
 MCU = atmega328p
@@ -54,18 +54,21 @@ VERSION=100
 ARDUINO = $(INSTALL_DIR)/hardware/arduino/cores/arduino
 VARIANTS = $(INSTALL_DIR)/hardware/arduino/variants/standard
 ARDUINO_LIB = $(INSTALL_DIR)/libraries
+AVR = $(INSTALL_DIR)/hardware/tools/avr/avr
 AVR_TOOLS_PATH = $(INSTALL_DIR)/hardware/tools/avr/bin
 AVRDUDE_PATH = $(INSTALL_DIR)/hardware/tools/avr/bin
 
 #Note that if your program has dependencies other than those
 #already listed below, you will need to add them accordingly.
+CXX_SRCS = $(wildcard ./*.cpp)
+
 C_MODULES =  \
 $(ARDUINO)/wiring_pulse.c \
 $(ARDUINO)/wiring_analog.c \
 $(ARDUINO)/wiring.c \
 $(ARDUINO)/wiring_digital.c \
 $(ARDUINO)/WInterrupts.c \
-$(ARDUINO)/wiring_shift.c \
+$(ARDUINO)/wiring_shift.c
 
 CXX_MODULES = \
 $(ARDUINO)/Tone.cpp \
@@ -82,7 +85,7 @@ $(ARDUINO)/WMath.cpp \
 $(ARDUINO)/WString.cpp \
 $(ARDUINO)/main.cpp \
 $(ARDUINO_LIB)/EEPROM/EEPROM.cpp \
-TinyGPS.cpp
+$(CXX_SRCS)
 
 CXX_MODULES += $(shell find $(ARDUINO_LIB)  -maxdepth 3 -mindepth 2 -type f -name "*.cpp" -exec /bin/echo -n " {}" \;)
 
@@ -108,8 +111,8 @@ CDEFS = -DF_CPU=$(F_CPU)L -DARDUINO=$(VERSION)
 CXXDEFS = -DF_CPU=$(F_CPU)L -DARDUINO=$(VERSION)
 
 # Place -I options here
-CINCS = -I$(ARDUINO)  -I$(VARIANTS) -I$(ARDUINO_LIB)
-CXXINCS = -I$(ARDUINO) -I$(VARIANTS) -I$(ARDUINO_LIB)
+CINCS = -I$(ARDUINO)  -I$(VARIANTS) -I$(ARDUINO_LIB) -I$(AVR)/include
+CXXINCS = -I$(ARDUINO) -I$(VARIANTS) -I$(ARDUINO_LIB) -I$(AVR)/include
 
 CINCS += $(shell find $(ARDUINO_LIB) -mindepth 1 -maxdepth 2 -type d ! -name examples -exec /bin/echo -n " -I{} " \;)
 CXXINCS += $(shell find $(ABDUINO_LIB) -mindepth 1 -maxdepth 2 -type d ! -name examples -exec /bin/echo -n " -I{} " \;)
