@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "WProgram.h"
 #endif
 
-#define _GPS_VERSION 12 // software version of this library
+#define _GPS_VERSION 13 // software version of this library
 #define _GPS_MPH_PER_KNOT 1.15077945
 #define _GPS_MPS_PER_KNOT 0.51444444
 #define _GPS_KMPH_PER_KNOT 1.852
@@ -87,9 +87,6 @@ public:
 
   static int library_version() { return _GPS_VERSION; }
 
-  static float distance_between (float lat1, float long1, float lat2, float long2);
-  static float course_to (float lat1, float long1, float lat2, float long2);
-  static const char *cardinal(float course);
 
 #ifndef _GPS_NO_STATS
   void stats(unsigned long *chars, unsigned short *good_sentences, unsigned short *failed_cs);
