@@ -44,16 +44,22 @@ SO...
 What do we expect the interaction to be? And what is the corner cases?
 
 - Normal running:
-1. keep receiving data from the gps
-2. write that data to the SD card
-3. remember to rotate files on the SD card...
+   
+    keep receiving data from the gps
+
+    write that data to the SD card
+    
+    remember to rotate files on the SD card...
 
 - Press the button
-immediately grab the last known location
+
+    immediately grab the last known location
 
 - No GPS?
-dunno... write data periodically? or write "BAD SIGNAL?"
+
+    dunno... write data periodically? or write "BAD SIGNAL?"
 
 - No SD?
-Simple, just don't to any of the writing
+
+    Simple, just don't to any of the writing
 
