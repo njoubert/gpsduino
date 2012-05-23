@@ -44,9 +44,9 @@ SO...
 What do we expect the interaction to be? And what is the corner cases?
 
 - Normal running:
-keep receiving data from the gps
-write that data to the SD card
-remember to rotate files on the SD card...
+1. keep receiving data from the gps
+2. write that data to the SD card
+3. remember to rotate files on the SD card...
 
 - Press the button
 immediately grab the last known location
