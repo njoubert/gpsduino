@@ -61,6 +61,7 @@ AVRDUDE_PATH = $(INSTALL_DIR)/hardware/tools/avr/bin
 #Note that if your program has dependencies other than those
 #already listed below, you will need to add them accordingly.
 CXX_SRCS = $(wildcard ./*.cpp)
+CXX_HDRS = $(wildcard ./*.h)
 
 C_MODULES =  \
 $(ARDUINO)/wiring_pulse.c \
@@ -178,7 +179,7 @@ all: $(CXX_APP) build sizeafter
 
 build: elf hex
 
-$(CXX_APP): $(TARGET).ino
+$(CXX_APP): $(TARGET).ino $(CXX_HDRS)
 	cp $(TARGET).ino __BUILD__$(TARGET).cpp
 
 
