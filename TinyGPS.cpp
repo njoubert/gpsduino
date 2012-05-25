@@ -56,7 +56,7 @@ TinyGPS::TinyGPS()
 // public methods
 //
 
-bool TinyGPS::encode(char c)
+bool TinyGPS::encode(char c, void (*callback)(bool))
 {
   bool valid_sentence = false;
 
@@ -73,11 +73,14 @@ bool TinyGPS::encode(char c)
     if (_term_offset < sizeof(_term))
     {
       _term[_term_offset] = 0;
-      valid_sentence = term_complete();
+      valid_sentence = term_complete(callback);
     }
     ++_term_number;
     _term_offset = 0;
     _is_checksum_term = c == '*';
+    // if (callback) {
+    //   callback(valid_sentence)
+    // }
     return valid_sentence;
 
   case '$': // sentence begin
@@ -161,7 +164,7 @@ unsigned long TinyGPS::parse_degrees()
 
 // Processes a just-completed term
 // Returns true if new sentence has just passed checksum test and is validated
-bool TinyGPS::term_complete()
+bool TinyGPS::term_complete(void (*callback)(bool))
 {
   if (_is_checksum_term)
   {
@@ -196,8 +199,16 @@ bool TinyGPS::term_complete()
           break;
         }
 
+      }
+
+      if (callback) {
+        (*callback)(_gps_data_good);
+      }
+
+      if (_gps_data_good) {
         return true;
       }
+      
     }
 
 #ifndef _GPS_NO_STATS

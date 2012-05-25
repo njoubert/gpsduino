@@ -57,3 +57,23 @@ dunno... write data periodically? or write "BAD SIGNAL?"
 - No SD?
 Simple, just don't to any of the writing
 
+Status FSM:
+
+- Every time you feed the GPS, you need to get the current status from it and report that.
+
+
+
+# GPS NMEA
+
+## Examples:
+
+No signal:
+
+    $GPGGA,072322.0,,,,,0,00,,,,,,,*7E
+    $GPRMC,072327.00,V,,,,,,,,,,N*7E
+
+
+Working:
+    
+    $GPGGA,072328.00,3722.2705,N,12206.6615,W,1,05,1.53,00065,M,-025,M,,*5E
+    $GPRMC,072328.00,A,3722.2705,N,12206.6615,W,000.0,000.0,250512,15.6,E,A*1F

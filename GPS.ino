@@ -79,17 +79,13 @@ void dumpGps() {
 }
   
 
-
-
-StatusFSM statusFSM;
-
-
 volatile long lastDebounceTime = 0;
 volatile bool stickyButtonPressed = false;
 void button_interrupt() {
   long now = millis();
   if ((now - lastDebounceTime) > BUTTON_DEBOUNCE_DELAY) {
     stickyButtonPressed = true;
+    StatusFSM::instance().pushed();
 #ifdef MIRROR_BUTTON_PRESS_INTERRUPT
     Serial.println("INTERRUPT: Button Press Fired and Debounced.");
 #endif
@@ -111,8 +107,10 @@ void setup()
 
   Serial.print("Initializing SD card...");
   if (!SD.begin(SD_CHIP_SELECT)) {
+    StatusFSM::instance().sd_unknown();
     Serial.println("FAILED");
   } else {
+    StatusFSM::instance().sd_good();
     Serial.println("READY");
     saveToSD = true;
   }
@@ -132,7 +130,7 @@ void setup()
   
   
   Serial.print("Initializing Status UI...");
-  statusFSM.init();
+  StatusFSM::instance().setup();
   Serial.println("DONE");
 
   Serial.print("Initializing Button UI...");
@@ -143,6 +141,15 @@ void setup()
   
 }
 
+
+void gps_sentence_parsed_callback(bool gps_data_good) {
+  if (gps_data_good) {
+    StatusFSM::instance().gps_good();
+  } else {
+    StatusFSM::instance().gps_bad();
+  }
+}
+
 /* Stage 1 of the pipeline */
 inline bool feedGPS() {
   bool newData = false;
@@ -151,13 +158,15 @@ inline bool feedGPS() {
     #ifdef MIRROR_GPS_DATA
     Serial.write(c);
     #endif
-    if (gps.encode(c)) {
+    if (gps.encode(c,&gps_sentence_parsed_callback)) {
       //sticky variable
       newData = true;
     }
   }
   return newData;
 }
+
+
 
 /* Stage 2 of the pipeline */
 inline void feedSD(bool gpsHasNewData, bool buttonPressed) {
@@ -194,7 +203,7 @@ void loop() {
   stickyButtonPressed = false;
   
   //Stage 3:
-  statusFSM.tick();
+  StatusFSM::instance().tick();
 
 
   // } else {

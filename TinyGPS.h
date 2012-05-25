@@ -51,8 +51,8 @@ public:
   static const float GPS_INVALID_F_ANGLE, GPS_INVALID_F_ALTITUDE, GPS_INVALID_F_SPEED;
 
   TinyGPS();
-  bool encode(char c); // process one character received from GPS
-  TinyGPS &operator << (char c) {encode(c); return *this;}
+  bool encode(char c, void (*callback)(bool)); // process one character received from GPS
+  TinyGPS &operator << (char c) {encode(c,NULL); return *this;}
 
   // lat/long in hundred thousandths of a degree and age of fix in milliseconds
   void get_position(long *latitude, long *longitude, unsigned long *fix_age = 0);
@@ -93,7 +93,7 @@ public:
 #endif
 
 private:
-  enum {_GPS_SENTENCE_GPGGA, _GPS_SENTENCE_GPRMC, _GPS_SENTENCE_OTHER};
+  enum {_GPS_SENTENCE_GPGGA, _GPS_SENTENCE_GPRMC, _GPS_SENTENCE_ZDA, _GPS_SENTENCE_OTHER};
 
   // properties
   unsigned long _time, _new_time;
@@ -130,7 +130,7 @@ private:
   int from_hex(char a);
   unsigned long parse_decimal();
   unsigned long parse_degrees();
-  bool term_complete();
+  bool term_complete(void (*callback)(bool));
   bool gpsisdigit(char c) { return c >= '0' && c <= '9'; }
   long gpsatol(const char *str);
   int gpsstrcmp(const char *str1, const char *str2);
