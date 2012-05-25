@@ -104,6 +104,11 @@ void setup()
   Serial.begin(115200);
   Serial.println("\n=== GPS Datalogger ===");
 
+  
+  Serial.print("Initializing Status UI...");
+  StatusFSM::instance().setup();
+  Serial.println("DONE");
+
   Serial.print("Initializing SD card...");
   if (!SD.begin(SD_CHIP_SELECT)) {
     StatusFSM::instance().sd_unknown();
@@ -126,10 +131,6 @@ void setup()
   #endif
   Serial.println("READY");
 
-  
-  Serial.print("Initializing Status UI...");
-  StatusFSM::instance().setup();
-  Serial.println("DONE");
 
 
   Serial.print("Initializing Button UI...");
@@ -257,6 +258,38 @@ void SD_write_trackpoint() {
   
 }
 
+void printFile(File file) {
+  //while(file.available()) {
+//    Serial.write(file.read());
+  //}
+}
+
+void printDirectory(File dir) {
+  while(true) {
+
+    File entry =  dir.openNextFile();
+    if (!entry) {
+      return;
+    }
+    Serial.println(entry.name());
+    if (!entry.isDirectory() && entry.name()[0] != '.') {
+      printFile(entry);
+    }
+  }
+}
+
+void dump_sd() {
+  if (navFile) {
+    navFile.close();
+  }
+  
+  File root = SD.open("/");
+  Serial.println("Dumping SD contents...");
+  printDirectory(root);
+  
+  
+}
+
 
 long last_sd_feed = 0;
 
@@ -283,20 +316,59 @@ inline void feedSD(bool gpsHasNewData, bool buttonPressed) {
   }
 }
 
+bool INTERACTIVE_MODE = false;
+
+void interactive_loop() {
+  Serial.println("======================");
+  Serial.println("Entering Interactive Mode...");
+  while(true) {
+    
+    StatusFSM::instance().tick();
+    
+    if (Serial.available() > 0) {
+      int incomingByte = Serial.read();
+      
+      if (incomingByte == 'I') {
+        break;
+      }
+      if (incomingByte == 'D') {
+        dump_sd();
+      }
+      if (incomingByte == 'S') {
+        
+        StatusFSM::instance().dumpStatus();
+        
+      }
+    }
+    
+  }
+  Serial.println("Leaving Interactive Mode...");
+  Serial.println("======================");
+}
+
 /* Here is the pipeline */
 void loop() {
 
+  if (Serial.available() > 0) {
+    int incomingByte = Serial.read();
+    if (incomingByte == 'I') {
+      interactive_loop();
+    }
+  } 
+  
+
   //Stage 1:
   bool gpsHasNewData = feedGPS();
-  
+
   //Stage 2:
   feedSD(gpsHasNewData, stickyButtonPressed);
-  
+
   //Reset button press state:
   stickyButtonPressed = false;
-  
+
   //Stage 3:
   StatusFSM::instance().tick();
+  
 
 }
 
