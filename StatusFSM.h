@@ -1,7 +1,7 @@
 #ifndef __StatusFSM_h_
 #define __StatusFSM_h_
 
-#define SET_ALL_GOOD do { all_good = ((gps_status == GPS_GOOD) && (sd_status == SD_GOOD)); } while(0);
+#define SET_ALL_GOOD do { all_good = ((gps_status == GOOD) && (sd_status == GOOD)); } while(0);
 
 class StatusFSM {
 
@@ -39,15 +39,13 @@ private:
   bool sd_write_in_progress;
   long sd_write_start_time;
   
+  enum STATUS { UNKNOWN=0, BAD=1, GOOD=2 };
+
+  unsigned int gps_status;
+  unsigned int sd_status;
+  bool all_good;
   
 public:
-
-  enum GPS_STATUS { GPS_UNKNOWN, GPS_BAD, GPS_GOOD };
-  enum SD_STATUS  { SD_UNKNOWN,  SD_BAD,  SD_GOOD };
-
-  enum GPS_STATUS gps_status;
-  enum SD_STATUS  sd_status;
-  bool all_good;
 
   
   static StatusFSM& instance() {
@@ -60,9 +58,6 @@ public:
     pinMode(LED_LEFT_PIN , OUTPUT); 
     pinMode(LED_MID_PIN  , OUTPUT); 
     pinMode(LED_RIGHT_PIN, OUTPUT);
-    
-    gps_unknown();
-    sd_unknown();
     
     setAll(LOW);
     digitalWriteAll();
@@ -90,26 +85,32 @@ public:
     }
     
     switch (gps_status) {
-      case GPS_UNKNOWN:
+      case UNKNOWN:
       setPin(GPS_LED,HIGH);
       break;
-      case GPS_BAD:
+      case BAD:
       fastBlink(GPS_LED,now);
       break;
-      case GPS_GOOD:
+      case GOOD:
       setPin(GPS_LED,LOW);
+      break;
+      default:
+      Serial.println("Gps Status INTERNAL ERROR");
       break;
     }
     
     switch (sd_status) {
-      case SD_UNKNOWN:
+      case UNKNOWN:
       setPin(SD_LED,HIGH);
       break;
-      case SD_BAD:
+      case BAD:
       fastBlink(SD_LED,now);
       break;
-      case SD_GOOD:
+      case GOOD:
       setPin(SD_LED,LOW);
+      break;
+      default:
+      Serial.println("SD Status INTERNAL ERROR");
       break;
     } 
 
@@ -122,16 +123,45 @@ public:
     digitalWriteAll();
   }
   
-  inline void gps_unknown() { gps_status = GPS_UNKNOWN; SET_ALL_GOOD }
-  inline void gps_bad()     { gps_status = GPS_BAD; SET_ALL_GOOD }
-  inline void gps_good()    { gps_status = GPS_GOOD; SET_ALL_GOOD }
-
-  inline void sd_unknown()  { sd_status = SD_UNKNOWN; SET_ALL_GOOD }
-  inline void sd_bad()      { sd_status = SD_BAD; SET_ALL_GOOD }
-  inline void sd_good()     { sd_status = SD_GOOD; SET_ALL_GOOD }
+  void dumpStatus() {
+    Serial.print("GPS_STATUS: ");
+    if (gps_status == UNKNOWN)
+      Serial.println("unknown");
+    else if (gps_status == BAD)
+      Serial.println("bad");
+    else if (gps_status == GOOD)
+      Serial.println("good");
+    else
+      Serial.println("***INTERNAL ERROR***");
+    
+    Serial.print("SD_STATUS: ");
+    if (sd_status == UNKNOWN)
+      Serial.println("unknown");
+    else if (sd_status == BAD)
+      Serial.println("bad");
+    else if (sd_status == GOOD)
+      Serial.println("good");
+    else
+      Serial.println("***INTERNAL ERROR***");
+    
+    Serial.print("ALL_GOOD: ");
+    if (all_good)
+      Serial.println("yes");
+    else
+      Serial.println("no");
+    
+  }
   
-  inline void pushed() { button_pressed = true; }  
-  inline void write_sd() { sd_write = true; }
+  void gps_unknown() { gps_status = UNKNOWN; SET_ALL_GOOD }
+  void gps_bad()     { gps_status = BAD; SET_ALL_GOOD }
+  void gps_good()    { gps_status = GOOD; SET_ALL_GOOD }
+  
+  void sd_unknown()  { sd_status = UNKNOWN; SET_ALL_GOOD }
+  void sd_bad()      { sd_status = BAD; SET_ALL_GOOD }
+  void sd_good()     { sd_status = GOOD; SET_ALL_GOOD }
+  
+  void pushed() { button_pressed = true; }  
+  void write_sd() { sd_write = true; }
   
 private:
   StatusFSM() {
@@ -143,8 +173,8 @@ private:
     for (unsigned int i = 0; i < 4; i++) {
       pinState[i] = LOW;
     }
-    gps_status = GPS_UNKNOWN;
-    sd_status  = SD_UNKNOWN;
+    gps_status = UNKNOWN;
+    sd_status  = UNKNOWN;
     all_good = false;
     last_blink_switch = 0;
     last_slow_blink_switch = 0;
