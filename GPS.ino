@@ -168,6 +168,48 @@ inline bool feedGPS() {
 
 
 
+File navFile;
+unsigned long fileDate;
+
+void SD_check_file(unsigned long date) {
+  if (!navFile || fileDate != date) {
+    if (navFile)
+      navFile.close();
+    
+    String filename = String(date);
+    navFile = Sd.open(filename, O_APPEND | FILE_WRITE);
+  }
+}
+
+void SD_write_trackpoint() {
+  if (!saveToSD)
+    return;
+  
+  unsigned long date;
+  unsigned long curtime;
+  unsigned long age;
+  gps.get_datetime(&date,&curtime,&age);
+
+  if (age == GPS_INVALID_AGE || date == GPS_INVALID_DATE) {
+    StatusFSM::instance().gps_bad();
+    return;
+  }
+    
+  checkFile(date);
+  
+  if (!navFile) {
+    StatusFSM::instance().sd_bad();
+  } else {
+    
+    //So, what do we write to the file
+    
+  }
+  
+  
+  
+}
+
+
 long last_sd_feed = 0;
 
 /* Stage 2 of the pipeline */
@@ -182,12 +224,7 @@ inline void feedSD(bool gpsHasNewData, bool buttonPressed) {
     return;
   else if (!buttonPressed)
     last_sd_feed = now;
-  
-  unsigned long date;
-  unsigned long curtime;
-  unsigned long age;
-  gps.get_datetime(&date,&curtime,&age);
-  
+    
 
   if (gpsHasNewData) {
     Serial.print(date);
