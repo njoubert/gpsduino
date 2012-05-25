@@ -29,12 +29,7 @@ private:
   int leds[4];
   int pinState[4];
   
-  enum GPS_STATUS { GPS_UNKNOWN, GPS_BAD, GPS_GOOD };
-  enum SD_STATUS  { SD_UNKNOWN,  SD_BAD,  SD_GOOD };
   
-  enum GPS_STATUS gps_status;
-  enum SD_STATUS  sd_status;
-  bool all_good;
   
   bool button_pressed;
   bool button_blink_in_progress;
@@ -46,6 +41,14 @@ private:
   
   
 public:
+
+  enum GPS_STATUS { GPS_UNKNOWN, GPS_BAD, GPS_GOOD };
+  enum SD_STATUS  { SD_UNKNOWN,  SD_BAD,  SD_GOOD };
+
+  enum GPS_STATUS gps_status;
+  enum SD_STATUS  sd_status;
+  bool all_good;
+
   
   static StatusFSM& instance() {
     static StatusFSM s;
@@ -57,6 +60,9 @@ public:
     pinMode(LED_LEFT_PIN , OUTPUT); 
     pinMode(LED_MID_PIN  , OUTPUT); 
     pinMode(LED_RIGHT_PIN, OUTPUT);
+    
+    gps_unknown();
+    sd_unknown();
     
     setAll(LOW);
     digitalWriteAll();
@@ -76,7 +82,6 @@ public:
     } else {
       setPin(OK_LED, LOW);      
     }
-    
     
     if (button_pressed) {
       blinkPinOnce(BUTTON_LED, now, button_pressed, button_blink_in_progress, button_blink_start_time, BUTTON_BLINK_DELAY);
@@ -110,12 +115,10 @@ public:
 
     if (sd_write) {
       blinkPinOnce(SD_LED, now, sd_write, sd_write_in_progress, sd_write_start_time, FAST_BLINK_DELAY);
-    } else {
-      setPin(SD_LED, LOW);
     }
     
-    updateFastBlink(now);
-    updateSlowBlink(now);
+    //updateFastBlink(now);
+    //updateSlowBlink(now);
     digitalWriteAll();
   }
   
@@ -127,23 +130,8 @@ public:
   inline void sd_bad()      { sd_status = SD_BAD; SET_ALL_GOOD }
   inline void sd_good()     { sd_status = SD_GOOD; SET_ALL_GOOD }
   
-  inline void pushed() { button_pressed = true; }
-  
+  inline void pushed() { button_pressed = true; }  
   inline void write_sd() { sd_write = true; }
-  
-  
-  // void okay() {
-  //   
-  // }
-  // 
-  // void unsetError() {
-  //   
-  // }
-  // 
-  // void setError() {
-  //   
-  // }
-  // 
   
 private:
   StatusFSM() {
