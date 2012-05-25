@@ -43,6 +43,7 @@ TinyGPS::TinyGPS()
   ,  _term_number(0)
   ,  _term_offset(0)
   ,  _gps_data_good(false)
+  ,  _new_time_good(false)
 #ifndef _GPS_NO_STATS
   ,  _encoded_characters(0)
   ,  _good_sentences(0)
@@ -89,6 +90,7 @@ bool TinyGPS::encode(char c, void (*callback)(bool))
     _sentence_type = _GPS_SENTENCE_OTHER;
     _is_checksum_term = false;
     _gps_data_good = false;
+    _new_time_good = false;
     return valid_sentence;
   }
 
@@ -199,6 +201,8 @@ bool TinyGPS::term_complete(void (*callback)(bool))
           break;
         }
 
+      } else if (_new_time_good) {
+        _time      = _new_time;        
       }
 
       if (callback) {
@@ -237,6 +241,7 @@ bool TinyGPS::term_complete(void (*callback)(bool))
     case COMBINE(_GPS_SENTENCE_GPGGA, 1):
       _new_time = parse_decimal();
       _new_time_fix = millis();
+      _new_time_good = true;
       break;
     case COMBINE(_GPS_SENTENCE_GPRMC, 2): // GPRMC validity
       _gps_data_good = _term[0] == 'A';

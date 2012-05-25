@@ -117,7 +117,8 @@ private:
   byte _term_number;
   byte _term_offset;
   bool _gps_data_good;
-
+  bool _new_time_good;
+  
 #ifndef _GPS_NO_STATS
   // statistics
   unsigned long _encoded_characters;
