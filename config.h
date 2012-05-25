@@ -26,5 +26,13 @@
 
 //#define SAVE_TRIMBLE_CONFIG_TO_FLASH 
 
+
+/* StatusFSM config */
+#define FAST_BLINK_DELAY 100
+#define BUTTON_BLINK_DELAY 500
+#define SLOW_BLINK_DELAY_ON 100
+#define SLOW_BLINK_DELAY_OFF 1000
+
+
 /* __config_h_ */
 #endif
