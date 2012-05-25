@@ -117,8 +117,8 @@ public:
       blinkPinOnce(SD_LED, now, sd_write, sd_write_in_progress, sd_write_start_time, FAST_BLINK_DELAY);
     }
     
-    //updateFastBlink(now);
-    //updateSlowBlink(now);
+    updateFastBlink(now);
+    updateSlowBlink(now);
     digitalWriteAll();
   }
   
@@ -145,6 +145,7 @@ private:
     }
     gps_status = GPS_UNKNOWN;
     sd_status  = SD_UNKNOWN;
+    all_good = false;
     last_blink_switch = 0;
     last_slow_blink_switch = 0;
     slow_blink_state = false;
