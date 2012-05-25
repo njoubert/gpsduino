@@ -16,7 +16,7 @@ class StatusFSM {
   #define SD_LED     3
   
   #define FAST_BLINK_DELAY 100
-
+  #define BUTTON_BLINK_DELAY 500
   #define SLOW_BLINK_DELAY_ON 100
   #define SLOW_BLINK_DELAY_OFF 1000
     
@@ -35,7 +35,15 @@ private:
   enum GPS_STATUS gps_status;
   enum SD_STATUS  sd_status;
   bool all_good;
+  
   bool button_pressed;
+  bool button_blink_in_progress;
+  long button_blink_start_time;
+  
+  bool sd_write;
+  bool sd_write_in_progress;
+  long sd_write_start_time;
+  
   
 public:
   
@@ -68,12 +76,14 @@ public:
     } else {
       setPin(OK_LED, LOW);      
     }
+    
+    
     if (button_pressed) {
-      slowBlink(BUTTON_LED);
+      blinkPinOnce(BUTTON_LED, now, button_pressed, button_blink_in_progress, button_blink_start_time, BUTTON_BLINK_DELAY);
     } else {
       setPin(BUTTON_LED, LOW);
     }
-
+    
     switch (gps_status) {
       case GPS_UNKNOWN:
       setPin(GPS_LED,HIGH);
@@ -85,6 +95,7 @@ public:
       setPin(GPS_LED,LOW);
       break;
     }
+    
     switch (sd_status) {
       case SD_UNKNOWN:
       setPin(SD_LED,HIGH);
@@ -96,9 +107,15 @@ public:
       setPin(SD_LED,LOW);
       break;
     } 
+
+    if (sd_write) {
+      blinkPinOnce(SD_LED, now, sd_write, sd_write_in_progress, sd_write_start_time, FAST_BLINK_DELAY);
+    } else {
+      setPin(SD_LED, LOW);
+    }
     
     updateFastBlink(now);
-    updateSlowBlink(now);    
+    updateSlowBlink(now);
     digitalWriteAll();
   }
   
@@ -111,6 +128,8 @@ public:
   inline void sd_good()     { sd_status = SD_GOOD; SET_ALL_GOOD }
   
   inline void pushed() { button_pressed = true; }
+  
+  inline void write_sd() { sd_write = true; }
   
   
   // void okay() {
@@ -194,10 +213,21 @@ private:
     } else if (slow_blink_state && (currentTime - last_slow_blink_switch > SLOW_BLINK_DELAY_ON)) {
       slow_blink_state = false;
       last_slow_blink_switch = currentTime;
-      button_pressed = false;
     }
   }
 
+  inline void blinkPinOnce(int pin, long now, bool & flip, bool & in_progress, long & start, long delay) {
+    if (!in_progress) {
+      start = now;
+      in_progress = true;
+    }
+    if (now - start > delay) {
+      in_progress = false;
+      flip = false;
+    }
+    setPin(pin, HIGH);
+  }
+  
   #undef LED_TOP_PIN
   #undef LED_LEFT_PIN
   #undef LED_MID_PIN

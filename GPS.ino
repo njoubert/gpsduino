@@ -45,7 +45,7 @@ void dumpGps() {
   } else {
     
     previousMillis = currentMillis;
-    
+    StatusFSM::instance().write_sd();
     Serial.println("\nGOTLOC");
   
     // unsigned long ch;
@@ -168,11 +168,20 @@ inline bool feedGPS() {
 
 
 
+long last_sd_feed = 0;
+
 /* Stage 2 of the pipeline */
 inline void feedSD(bool gpsHasNewData, bool buttonPressed) {
   if (!(gpsHasNewData || buttonPressed)) {
     return;
   }
+  
+  long now = millis();
+
+  if (!buttonPressed && (now - last_sd_feed < SD_FEED_MIN_DUR))
+    return;
+  else if (!buttonPressed)
+    last_sd_feed = now;
   
   unsigned long date;
   unsigned long curtime;
@@ -185,6 +194,7 @@ inline void feedSD(bool gpsHasNewData, bool buttonPressed) {
     Serial.print(" ");
     Serial.print(curtime);
     Serial.println(": Feeding the SD with updated GPS data");
+    
   }
   if (buttonPressed) {
     Serial.println("Feeding the SD with button press");

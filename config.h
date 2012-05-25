@@ -22,6 +22,8 @@
 
 #define BUTTON_DEBOUNCE_DELAY 500
 
+#define SD_FEED_MIN_DUR 500
+
 //#define SAVE_TRIMBLE_CONFIG_TO_FLASH 
 
 /* __config_h_ */
