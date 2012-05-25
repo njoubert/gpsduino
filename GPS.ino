@@ -45,7 +45,6 @@ void dumpGps() {
   } else {
     
     previousMillis = currentMillis;
-    StatusFSM::instance().write_sd();
     Serial.println("\nGOTLOC");
   
     // unsigned long ch;
@@ -122,20 +121,21 @@ void setup()
   tsip_SetNMEA(&tsipSerial,TRIMBLE_NMEA_GGA | TRIMBLE_NMEA_RMC);
   tsip_SetNMEA(&tsipSerial,TRIMBLE_NMEA_GGA | TRIMBLE_NMEA_RMC);
   tsip_SetNMEA(&tsipSerial,TRIMBLE_NMEA_GGA | TRIMBLE_NMEA_RMC);
-
   #ifdef SAVE_TRIMBLE_CONFIG_TO_FLASH
     tsip_SaveToFLASH(&tsipSerial);
   #endif
   Serial.println("READY");
-  
+
   
   Serial.print("Initializing Status UI...");
   StatusFSM::instance().setup();
   Serial.println("DONE");
 
+
   Serial.print("Initializing Button UI...");
   button_interrupt_config();
   Serial.println("DONE");
+
   
   Serial.flush();
   
@@ -177,7 +177,10 @@ void SD_check_file(unsigned long date) {
       navFile.close();
     
     String filename = String(date);
-    navFile = Sd.open(filename, O_APPEND | FILE_WRITE);
+    char buf[9];
+    filename.toCharArray(buf, 9);
+    buf[8] = '\0';
+    navFile = SD.open(buf, O_APPEND | FILE_WRITE);
   }
 }
 
@@ -190,18 +193,63 @@ void SD_write_trackpoint() {
   unsigned long age;
   gps.get_datetime(&date,&curtime,&age);
 
-  if (age == GPS_INVALID_AGE || date == GPS_INVALID_DATE) {
+  Serial.print(date);
+  Serial.print(" ");
+  Serial.print(curtime);
+  Serial.println(": Feeding the SD with updated GPS data");
+
+  if (age == TinyGPS::GPS_INVALID_AGE || date == TinyGPS::GPS_INVALID_DATE) {
     StatusFSM::instance().gps_bad();
     return;
   }
     
-  checkFile(date);
+  SD_check_file(date);
   
   if (!navFile) {
     StatusFSM::instance().sd_bad();
   } else {
     
-    //So, what do we write to the file
+    static const size_t buflen = 20;
+    uint8_t buf[buflen];
+    static const uint8_t SEP = ',';
+    static const uint8_t END = '\n';
+
+    #define WRITE_SD(val) do {          \
+      String data = String(val);        \
+      data.getBytes(buf,buflen);        \
+      buf[data.length()] = '\0';        \
+      navFile.write(buf,data.length()); \
+      } while(0);
+    
+    #define WRITE_SD_SEPARATOR navFile.write(&SEP,1)
+    #define WRITE_SD_END navFile.write(&END,1);
+
+    long lat;
+    long lon;
+    gps.get_position(&lat,&lon);
+
+    WRITE_SD(date);
+    WRITE_SD_SEPARATOR;
+    WRITE_SD(curtime);
+    WRITE_SD_SEPARATOR;
+    WRITE_SD(age);
+    WRITE_SD_SEPARATOR;
+    WRITE_SD(lat);
+    WRITE_SD_SEPARATOR;
+    WRITE_SD(lon);
+    WRITE_SD_SEPARATOR;
+    
+    WRITE_SD(gps.altitude());
+    WRITE_SD_SEPARATOR;
+    WRITE_SD(gps.speed());
+    WRITE_SD_SEPARATOR;
+    WRITE_SD(gps.course());
+    WRITE_SD_END;
+  
+    
+    navFile.flush();
+    StatusFSM::instance().write_sd();
+
     
   }
   
@@ -227,11 +275,7 @@ inline void feedSD(bool gpsHasNewData, bool buttonPressed) {
     
 
   if (gpsHasNewData) {
-    Serial.print(date);
-    Serial.print(" ");
-    Serial.print(curtime);
-    Serial.println(": Feeding the SD with updated GPS data");
-    
+    SD_write_trackpoint();
   }
   if (buttonPressed) {
     Serial.println("Feeding the SD with button press");
@@ -239,7 +283,9 @@ inline void feedSD(bool gpsHasNewData, bool buttonPressed) {
   }
 }
 
+/* Here is the pipeline */
 void loop() {
+
   //Stage 1:
   bool gpsHasNewData = feedGPS();
   
@@ -251,22 +297,6 @@ void loop() {
   
   //Stage 3:
   StatusFSM::instance().tick();
-
-
-  // } else {
-  // 
-  //   if (nmeaSerial.available()) {
-  //     uint8_t c = nmeaSerial.read();
-  // 
-  //     File dataFile = SD.open("datalog.txt", FILE_WRITE);
-  //     if (saveToSD && dataFile) {
-  //       dataFile.print(dataString);
-  //       dataFile.close();
-  //     }  
-  // 
-  //     Serial.write(c);
-  //    }
-  //   }
 
 }
 
